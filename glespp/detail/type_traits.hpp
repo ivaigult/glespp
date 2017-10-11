@@ -4,11 +4,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 template<typename CType>
-struct GLTypeTraits;
+struct gl_type_traits;
 
 #define REGISTER_GL_TYPE(c_type, gl_type, gl_size) \
     template<>                                     \
-    struct GLTypeTraits<c_type>                    \
+    struct gl_type_traits<c_type>                  \
     {                                              \
         static constexpr GLint   type   = gl_type; \
         static constexpr GLsizei size = gl_size;   \

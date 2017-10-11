@@ -8,58 +8,62 @@
 
 #include "type_traits.hpp"
 
-template<typename VertexType>
-class VertexArray {
+namespace glespp {
+namespace detail {
+template<typename vertex_t>
+class vertex_array {
 public:
-    VertexArray() {
-        AttribEnumerator attribEnumerator(_vaps);
-        static_cast<VertexType*>(nullptr)->foreach_member(attribEnumerator);
+    typedef vertex_t vertex_type;
+    vertex_array() {
+        attrib_enumerator attribEnumerator(_vaps);
+        static_cast<vertex_type*>(nullptr)->foreach_member(attribEnumerator);
     }
-    virtual void BindAttribLocations(GLuint program) {
+
+    void pre_link(GLuint program) {
         GLuint index = 0;
-        for (const VAPArgs& args : _vaps) {
+        for (const vap_args& args : _vaps) {
             glBindAttribLocation(program, index, args.name.c_str());
             ++index;
         }
     }
-    void Minify(GLuint program) {
-        GLint numAttribs = 0;
-        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttribs);
+    void post_link(GLuint program) {
+        GLint num_attribs = 0;
+        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &num_attribs);
 
-        GLint maxNameLen = 0;
-        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxNameLen);
-        std::vector<char> curName(maxNameLen + 1);
+        GLint max_name_len = 0;
+        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &max_name_len);
+        std::vector<char> cur_name(max_name_len + 1);
 
-        std::set<GLint> activeIndices;
+        std::set<GLint> active_indices;
 
-        for (GLint i = 0; i < numAttribs; ++i) {
-            glGetActiveAttrib(program, i, (GLsizei)curName.size(), nullptr, nullptr, nullptr, curName.data());
-            GLint index = glGetAttribLocation(program, curName.data());
-            activeIndices.insert(index);
+        for (GLint i = 0; i < num_attribs; ++i) {
+            glGetActiveAttrib(program, i, (GLsizei)cur_name.size(), nullptr, nullptr, nullptr, cur_name.data());
+            GLint index = glGetAttribLocation(program, cur_name.data());
+            active_indices.insert(index);
         }
 
-        std::vector<VAPArgs>::iterator result = std::remove_if(
+        std::vector<vap_args>::iterator result = std::remove_if(
             _vaps.begin(),
             _vaps.end(),
-            [&activeIndices](VAPArgs& args) -> bool {
-            return !activeIndices.count(args.index);
+            [&active_indices](vap_args& args) -> bool {
+            return !active_indices.count(args.index);
         });
 
         _vaps.erase(result, _vaps.end());
     }
-    void Bind() {
-        for (const VAPArgs& args : _vaps) {
+    void bind() {
+        for (const vap_args& args : _vaps) {
             glVertexAttribPointer(args.index, args.size, args.type, args.normalized, args.stride, args.pointer);
             glEnableVertexAttribArray(args.index);
         }
     }
-    void Unbind() {
-        for (const VAPArgs& args : _vaps) {
+    void unblind() {
+        for (const vap_args& args : _vaps) {
             glDisableVertexAttribArray(args.index);
         }
     }
 private:
-    struct VAPArgs {
+    struct vap_args {
         std::string    name;
         GLuint         index;
         GLint          size;
@@ -69,9 +73,9 @@ private:
         const GLvoid * pointer;
     };
 
-    class AttribEnumerator {
+    class attrib_enumerator {
     public:
-        AttribEnumerator(std::vector<VAPArgs>& vaps)
+        attrib_enumerator(std::vector<vap_args>& vaps)
             : _index(0u)
             , _vaps(vaps)
         {}
@@ -80,34 +84,37 @@ private:
         void operator()(const char* name, const field_t& field) {
             size_t offset = reinterpret_cast<size_t>(&field);
 
-            VAPArgs args = {};
+            vap_args args   = {};
             args.name       = name;
             args.index      = _index;
-            args.size       = GLTypeTraits<field_t>::size;
-            args.type       = GLTypeTraits<field_t>::type;
+            args.size       = gl_type_traits<field_t>::size;
+            args.type       = gl_type_traits<field_t>::type;
             args.normalized = GL_FALSE;
-            args.stride     = sizeof(VertexType);
+            args.stride     = sizeof(vertex_type);
             args.pointer    = (const void*) offset;
 
             _vaps.push_back(args);
             ++_index;
         }
     private:
-        GLuint                _index;
-        std::vector<VAPArgs>& _vaps;
+        GLuint                 _index;
+        std::vector<vap_args>& _vaps;
     };
 
-    std::vector<VAPArgs> _vaps;
+    std::vector<vap_args> _vaps;
 };
 
-template<typename VertexType>
-struct VAOGuard {
-    VAOGuard(VertexArray<VertexType>& vao)
+template<typename vertex_t>
+struct vao_guard {
+    vao_guard(vertex_array<vertex_t>& vao)
         : _vao(vao)
-    { _vao.Bind(); }
+    { _vao.bind(); }
 
-    ~VAOGuard()
-    { _vao.Unbind(); }
+    ~vao_guard()
+    { _vao.unblind(); }
 
-    VertexArray<VertexType>& _vao;
+    vertex_array<vertex_t>& _vao;
 };
+
+} // detail
+} // glespp

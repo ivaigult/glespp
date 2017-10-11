@@ -20,27 +20,29 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-class Shader {
+namespace glespp {
+namespace detail {
+class shader {
 public:
     enum Type {
-        kVertex,
-        kFragment,
+        vertex,
+        fragment,
     };
 
-    Shader(std::istream& is, Type t) {
+    shader(std::istream& is, Type t) {
         _source.reserve(1 << 12);
 
-        GLenum shaderType = GL_VERTEX_SHADER;
+        GLenum shader_type = GL_VERTEX_SHADER;
         switch (t) {
-        case kVertex:
-            shaderType = GL_VERTEX_SHADER;
+        case vertex:
+            shader_type = GL_VERTEX_SHADER;
             break;
-        case kFragment:
-            shaderType = GL_FRAGMENT_SHADER;
+        case fragment:
+            shader_type = GL_FRAGMENT_SHADER;
             break;
         }
 
-        _id = glCreateShader(shaderType);
+        _id = glCreateShader(shader_type);
         if (!_id) {
             throw std::runtime_error("Failed to create shader");
         }
@@ -48,80 +50,84 @@ public:
         _source.assign((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
         _source.push_back('\0');
 
-        char* shaderText = _source.data();
-        glShaderSource(_id, 1, &shaderText, nullptr);
+        char* shader_text = _source.data();
+        glShaderSource(_id, 1, &shader_text, nullptr);
         glCompileShader(_id);
 
         GLint status = GL_FALSE;
         glGetShaderiv(_id, GL_COMPILE_STATUS, &status);
         if (GL_FALSE == status) {
-            std::vector<char> infoLog;
-            GLint infologLen = 0;
-            glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &infologLen);
-            infoLog.resize(infologLen + 1);
+            std::vector<char> info_log;
+            GLint info_log_len = 0;
+            glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &info_log_len);
+            info_log.resize(info_log_len + 1);
 
-            glGetShaderInfoLog(_id, (GLsizei)infoLog.size(), nullptr, infoLog.data());
-            throw std::runtime_error(std::string("Compilation failed: \n") + infoLog.data());
+            glGetShaderInfoLog(_id, (GLsizei)info_log.size(), nullptr, info_log.data());
+            throw std::runtime_error(std::string("Compilation failed: \n") + info_log.data());
         }
     }
 
-    ~Shader() {
+    ~shader() {
         glDeleteShader(_id);
     }
 
-    GLuint GetId() const {
+    GLuint get_id() const {
         return _id;
     }
 private:
     GLuint            _id;
     std::vector<char> _source;
 };
+} // detail
 
-enum class GeomTopology {
-    Points,
-    LineStrip,
-    LineLoop,
-    Lines,
-    TriangleStrip,
-    TriangleFan,
-    Triangles,
+enum class geom_topology {
+    points,
+    line_strip,
+    line_loop,
+    lines,
+    triangle_strip,
+    triangle_fan,
+    triangles,
 };
 
-inline GLenum GeomTopology2GLEnum(GeomTopology t) {
+inline GLenum geom_topology2gl_enum(geom_topology t) {
     switch (t) {
-    case GeomTopology::Points:        return GL_POINTS;
-    case GeomTopology::LineStrip:     return GL_LINE_STRIP;
-    case GeomTopology::LineLoop:      return GL_LINE_LOOP;
-    case GeomTopology::Lines:         return GL_LINES;
-    case GeomTopology::TriangleStrip: return GL_TRIANGLE_STRIP;
-    case GeomTopology::TriangleFan:   return GL_TRIANGLE_FAN;
-    case GeomTopology::Triangles:     return GL_TRIANGLES;
-    default:                          return GL_TRIANGLES;
+    case geom_topology::points:         return GL_POINTS;
+    case geom_topology::line_strip:     return GL_LINE_STRIP;
+    case geom_topology::line_loop:      return GL_LINE_LOOP;
+    case geom_topology::lines:          return GL_LINES;
+    case geom_topology::triangle_strip: return GL_TRIANGLE_STRIP;
+    case geom_topology::triangle_fan:   return GL_TRIANGLE_FAN;
+    case geom_topology::triangles:      return GL_TRIANGLES;
+    default:                            return GL_TRIANGLES;
     }
 }
 
-template<typename VertexType, typename UniformType>
-class Program {
+template<typename vertex_t, typename uniform_t>
+class program {
 public:
-    Program(std::istream& vSource, std::istream& fSource)
+    typedef vertex_t  vertex_type;
+    typedef uniform_t uniform_type;
+
+    program(std::istream& vSource, std::istream& fSource)
         : _id(0)
         , _uniform({})
         , _attribs(0u)
     {
-        Shader vSh(vSource, Shader::kVertex);
-        Shader fSh(fSource, Shader::kFragment);
+        detail::shader vertex_sh(vSource, detail::shader::vertex);
+        detail::shader fragment_sh(fSource, detail::shader::fragment);
 
         _id = glCreateProgram();
-        glAttachShader(_id, vSh.GetId());
-        glAttachShader(_id, fSh.GetId());
+        glAttachShader(_id, vertex_sh.get_id());
+        glAttachShader(_id, fragment_sh.get_id());
 
-        _vao.BindAttribLocations(_id);
+        _vao.pre_link(_id);
         glLinkProgram(_id);
-        _vao.Minify(_id);
-        _ubo.InitGLLocations(_id);
+        _vao.post_link(_id);
+        _ubo.post_link(_id);
 
-        glDetachShader(_id, vSh.GetId());
-        glDetachShader(_id, fSh.GetId());
+        glDetachShader(_id, vertex_sh.get_id());
+        glDetachShader(_id, fragment_sh.get_id());
 
         GLint status = GL_FALSE;
         glGetProgramiv(_id, GL_LINK_STATUS, &status);
@@ -137,41 +143,42 @@ public:
         }
     }
 
-    ~Program() {
+    ~program() {
         glDeleteProgram(_id);
     }
 
-    void SetUniform(const UniformType& u)             { _uniform = u;              }
-    void SetAttribs(const Buffer<VertexType>& buffer) { _attribs = buffer.GetId(); }
+    void set_uniform(const uniform_type& u)                    { _uniform = u;               }
+    void set_attribs(const buffer_object<vertex_type>& buffer) { _attribs = buffer.get_id(); }
 
-    template<typename IndexType>
-    void Execute(GeomTopology t, Buffer<IndexType>& indices, size_t start, size_t count) {
+    template<typename index_t>
+    void execute(geom_topology t, buffer_object<index_t>& indices, size_t start, size_t count) {
         glUseProgram(_id);
         _ubo.Set(_uniform);
         glBindBuffer(GL_ARRAY_BUFFER, _attribs);
-        VAOGuard<VertexType> guard(_vao);
+        detail::vao_guard<vertex_type> guard(_vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.GetId());
 
-        GLenum mode = GeomTopology2GLEnum(t);
-        GLenum type = GLTypeTraits<IndexType>::type;
+        GLenum mode = geom_topology2gl_enum(t);
+        GLenum type = gl_type_traits<index_t>::type;
         glDrawElements(mode, (GLsizei)size, type, (void*) sizeof(IndexType)*start);
     }
 
-    void Execute(GeomTopology t, size_t start, size_t size) {
+    void execute(geom_topology t, size_t start, size_t size) {
         glUseProgram(_id);
-        _ubo.Set(_uniform);
+        _ubo.set(_uniform);
         glBindBuffer(GL_ARRAY_BUFFER, _attribs);
-        VAOGuard<VertexType> guard(_vao);
+        detail::vao_guard<vertex_type> guard(_vao);
 
-        GLenum mode = GeomTopology2GLEnum(t);
+        GLenum mode = geom_topology2gl_enum(t);
         glDrawArrays(mode, (GLint)start, (GLsizei)size);
     }
 
 private:
-    GLuint                         _id;
-    UniformType                    _uniform;
-    GLuint                         _attribs; // TODO: what if buffer is removed?
-    VertexArray<VertexType>        _vao;
-    UniformBuffer<UniformType>     _ubo;
+    GLuint                                _id;
+    uniform_type                          _uniform;
+    GLuint                                _attribs; // TODO: what if buffer is removed?
+    detail::vertex_array<vertex_type>     _vao;
+    detail::unibofrm_buffer<uniform_type> _ubo;
 };
 
+} // glespp

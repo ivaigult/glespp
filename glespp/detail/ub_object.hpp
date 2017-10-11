@@ -2,49 +2,54 @@
 
 #include <glad/glad.h>
 
-template<typename UniformType>
-class UniformBuffer  {
+namespace glespp {
+namespace detail {
+
+template<typename uniform_t>
+class unibofrm_buffer  {
 public:
-    UniformBuffer() {
-        InitRemap visitor(_uniformRemap);
-        static_cast<UniformType*>(nullptr)->foreach_member(visitor);
+    typedef uniform_t uniform_type;
+
+    unibofrm_buffer() {
+        init_remap visitor(_uniformRemap);
+        static_cast<uniform_type*>(nullptr)->foreach_member(visitor);
     }
 
-    void InitGLLocations(GLuint program) {
-        for (NameLocation& r : _uniformRemap) {
+    void post_link(GLuint program) {
+        for (name_location& r : _uniformRemap) {
             r.location = glGetUniformLocation(program, r.name.c_str());
         }
     }
 
-    void Set(const UniformType& uniform) {
-        SetUniform visitor(_uniformRemap);
+    void set(const uniform_type& uniform) {
+        set_uniform visitor(_uniformRemap);
         uniform.foreach_member(visitor);
     }
 
 private:
-    struct NameLocation {
+    struct name_location {
         std::string name;
         GLint       location;
     };
 
-    struct InitRemap {
-        InitRemap(std::vector<NameLocation>& uniformRemap)
+    struct init_remap {
+        init_remap(std::vector<name_location>& uniformRemap)
             : _uniformRemap(uniformRemap)
         {}
         template<typename field_t>
         void operator() (const char* name, const field_t& field) {
-            NameLocation info = {};
-            info.name = name;
+            name_location info = {};
+            info.name     = name;
             info.location = -1;
 
             _uniformRemap.push_back(info);
         }
     private:
-        std::vector<NameLocation>& _uniformRemap;
+        std::vector<name_location>& _uniformRemap;
     };
 
-    struct SetUniform {
-        SetUniform(std::vector<NameLocation>& uniformRemap)
+    struct set_uniform {
+        set_uniform(std::vector<name_location>& uniformRemap)
             : _remap(uniformRemap)
             , _index(0u)
         {}
@@ -57,9 +62,12 @@ private:
         void operator()(const char*, const glm::mat3& m)   { glUniformMatrix3fv(_remap[_index].location, 1, GL_FALSE, glm::value_ptr(m)); ++_index; }
         void operator()(const char*, const glm::mat4& m)   { glUniformMatrix4fv(_remap[_index].location, 1, GL_FALSE, glm::value_ptr(m)); ++_index; }
     private:
-        std::vector<NameLocation>& _remap;
-        GLuint                     _index;
+        std::vector<name_location>& _remap;
+        GLuint                      _index;
     };
 
-    std::vector<NameLocation> _uniformRemap;
+    std::vector<name_location> _uniformRemap;
 };
+
+} // detail
+} // glespp

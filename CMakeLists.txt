@@ -3,7 +3,7 @@ project(xxx)
 add_subdirectory(dependencies)
 
 include(compile_assets/compile_assets.cmake)
-compile_assets(assets "${CMAKE_CURRENT_LIST_DIR}/assets")
+compile_assets(assets "${CMAKE_CURRENT_LIST_DIR}/demos/assets")
 
 add_library(glespp INTERFACE)
 target_include_directories(glespp INTERFACE glespp)

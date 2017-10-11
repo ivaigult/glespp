@@ -2,52 +2,55 @@
 
 #include <glad/glad.h>
 
-template<typename ElementType>
-class Buffer {
-public:
-    typedef ElementType  ElementType;
-    typedef ElementType* ElementPtrType;
+namespace glespp {
 
-    Buffer(std::initializer_list<ElementType> il) {
-        size_t size = il.size() * sizeof(ElementType);
+template<typename element_t>
+class buffer_object {
+public:
+    typedef element_t  element_type;
+    typedef element_t* element_pointer;
+
+    buffer_object(std::initializer_list<element_type> il) {
+        size_t size = il.size() * sizeof(element_type);
         glGenBuffers(1, &_id);
         glBindBuffer(GL_ARRAY_BUFFER, _id);
         glBufferData(GL_ARRAY_BUFFER, (GLsizei)size, nullptr, GL_DYNAMIC_DRAW);
-        Update(0, il);
+        update(0, il);
     }
 
-    Buffer(size_t size) {
+    buffer_object(size_t size) {
         glGenBuffer(1, &_id);
         glBindBuffer(GL_ARRAY_BUFFER, _id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(ElementType) * size, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(element_type) * size, nullptr, GL_DYNAMIC_DRAW);
     }
 
-    ~Buffer() {
+    ~buffer_object() {
         glDeleteBuffers(1, &_id);
     }
 
     template<typename IteratorT>
-    void Update(size_t offset, IteratorT begin, IteratorT end) {
-        std::vector<ElementType> data(begin, end);
-        Update(offset, data.data(), data.size() * sizeof(ElementType));
+    void update(size_t offset, IteratorT begin, IteratorT end) {
+        std::vector<element_type> data(begin, end);
+        update(offset, data.data(), data.size() * sizeof(element_type));
     }
 
     template<typename ValueT>
-    void Update(size_t offset, std::initializer_list<ValueT> il) {
-        Update(offset, il.begin(), il.end());
+    void update(size_t offset, std::initializer_list<ValueT> il) {
+        update(offset, il.begin(), il.end());
     }
     
-    void Update(size_t offset, ElementPtrType begin, ElementPtrType end) {
-        size_t size = static_cast<size_t>(end - begin) * sizeof(ElementType);
-        Update(offset, begin, size);
+    void update(size_t offset, element_pointer begin, element_pointer end) {
+        size_t size = static_cast<size_t>(end - begin) * sizeof(element_type);
+        update(offset, begin, size);
     }
 
-    void Update(size_t offset, ElementPtrType ptr, size_t size) {
+    void update(size_t offset, element_pointer ptr, size_t size) {
         glBindBuffer(GL_ARRAY_BUFFER, _id);
         glBufferSubData(GL_ARRAY_BUFFER, GLsizei(offset), size, ptr);
     }
 
-    GLuint GetId() const { return _id; }
+    GLuint get_id() const { return _id; }
 private:
     GLuint _id;
 };
+} // glespp

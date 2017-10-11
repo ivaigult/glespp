@@ -57,13 +57,13 @@ int main(void)
     glfwSwapInterval(1);
 
 
-    Buffer<MyVertex> verticies = {
+    glespp::buffer_object<MyVertex> verticies = {
         { {-0.6f, -0.4f }, { 1.f, 0.f, 0.f} },
         { {0.6f,  -0.4f }, { 0.f, 1.f, 0.f} },
         { {0.f,    0.6f }, { 0.f, 0.f, 1.f} }
     };
 
-    Program<MyVertex, MyUniform> pr(assets::open("/shaders/vertex.glsl"), assets::open("/shaders/fragment.glsl"));
+    glespp::program<MyVertex, MyUniform> pr(assets::open("/shaders/vertex.glsl"), assets::open("/shaders/fragment.glsl"));
     MyUniform uniform;
 
     while (!glfwWindowShouldClose(window))
@@ -78,9 +78,9 @@ int main(void)
         uniform.MVP = glm::ortho(-ratio, ratio, -1.f, 1.f);
         uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime(), glm::vec3(0.f, 0.f, 1.f));
 
-        pr.SetAttribs(verticies);
-        pr.SetUniform(uniform);
-        pr.Execute(GeomTopology::Triangles, 0, 3);
+        pr.set_attribs(verticies);
+        pr.set_uniform(uniform);
+        pr.execute(glespp::geom_topology::triangles, 0, 3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -91,5 +91,3 @@ int main(void)
     glfwTerminate();
     exit(EXIT_SUCCESS);
 }
-
-//! [code]
