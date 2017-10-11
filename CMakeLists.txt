@@ -14,3 +14,4 @@ function(add_demo name)
 endfunction()
 
 add_demo(triangle)
+add_demo(texture)

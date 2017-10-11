@@ -43,7 +43,7 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    window = glfwCreateWindow(640, 480, "Triangle example", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Texture example", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -56,11 +56,16 @@ int main(void)
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     glfwSwapInterval(1);
 
+
     glespp::buffer_object<MyVertex> verticies = {
         { {-0.6f, -0.4f }, { 1.f, 0.f, 0.f} },
         { {0.6f,  -0.4f }, { 0.f, 1.f, 0.f} },
         { {0.f,    0.6f }, { 0.f, 0.f, 1.f} }
     };
+
+    glespp::texture<glespp::pixel_format::rgb888> texture(2, 2);
+    glespp::pixel_format::rgb888 data[] = { {1, 0, 0},{ 0, 1, 0 },{ 0, 0, 1 },{ 1, 0, 1 } };
+    texture.update(0, 0, 0, 2, 2, data);
 
     glespp::program<MyVertex, MyUniform> pr(assets::open("/shaders/vertex.glsl"), assets::open("/shaders/fragment.glsl"));
     MyUniform uniform;
@@ -75,7 +80,6 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         uniform.MVP = glm::ortho(-ratio, ratio, -1.f, 1.f);
-        uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime(), glm::vec3(0.f, 0.f, 1.f));
 
         pr.set_attribs(verticies);
         pr.set_uniform(uniform);
