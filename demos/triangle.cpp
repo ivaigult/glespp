@@ -63,6 +63,10 @@ int main(void)
         { {0.f,    0.6f }, { 0.f, 0.f, 1.f} }
     };
 
+    glespp::texture<glespp::pixel_format::rgb888> texture(2, 2);
+    glespp::pixel_format::rgb888 data[] = { {1, 0, 0},{ 0, 1, 0 },{ 0, 0, 1 },{ 1, 0, 1 } };
+    texture.update(0, 0, 0, 2, 2, data);
+
     glespp::program<MyVertex, MyUniform> pr(assets::open("/shaders/vertex.glsl"), assets::open("/shaders/fragment.glsl"));
     MyUniform uniform;
 
