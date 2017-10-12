@@ -15,3 +15,4 @@ endfunction()
 
 add_demo(triangle)
 add_demo(texture)
+add_demo(cube)
