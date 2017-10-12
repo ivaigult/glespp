@@ -12,3 +12,6 @@ add_library(glad STATIC glfw/deps/glad.c)
 target_include_directories(glad PUBLIC glfw/deps)
 
 add_subdirectory(glm)
+
+add_library(gli INTERFACE)
+target_include_directories(gli INTERFACE gli)

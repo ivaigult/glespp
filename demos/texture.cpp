@@ -23,11 +23,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 DEF_REFLECTABLE(MyVertex,
     (glm::vec2, vPos),
-    (glm::vec3, vCol)
+    (glm::vec2, vTex)
 );
 
 DEF_REFLECTABLE(MyUniform,
-    (glm::mat4, MVP)
+    (glm::mat4,           MVP),
+    (glespp::texture_ref, uTex)
 );
 
 int main(void)
@@ -43,7 +44,7 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    window = glfwCreateWindow(640, 480, "Texture example", NULL, NULL);
+    window = glfwCreateWindow(480, 480, "Texture example", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -56,18 +57,25 @@ int main(void)
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     glfwSwapInterval(1);
 
-
     glespp::buffer_object<MyVertex> verticies = {
-        { {-0.6f, -0.4f }, { 1.f, 0.f, 0.f} },
-        { {0.6f,  -0.4f }, { 0.f, 1.f, 0.f} },
-        { {0.f,    0.6f }, { 0.f, 0.f, 1.f} }
+        { { -1.f, -1.f }, { 0.f, 0.f} },
+        { { 1.f,  -1.f }, { 1.f, 0.f} },
+        { { -1.f,  1.f }, { 0.f, 1.f} },
+        { { 1.f,   1.f }, { 1.f, 1.f} },
     };
 
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                
     glespp::texture<glespp::pixel_format::rgb888> texture(2, 2);
-    glespp::pixel_format::rgb888 data[] = { {1, 0, 0},{ 0, 1, 0 },{ 0, 0, 1 },{ 1, 0, 1 } };
+
+    glespp::pixel_format::rgb888 data[] = { 
+        { 255, 0, 0   }, { 0, 255, 0   },
+        { 0,   0, 255 }, { 0, 255, 255 },
+    };
     texture.update(0, 0, 0, 2, 2, data);
 
-    glespp::program<MyVertex, MyUniform> pr(assets::open("/shaders/vertex.glsl"), assets::open("/shaders/fragment.glsl"));
+    glespp::program<MyVertex, MyUniform> pr(assets::open("/shaders/sprite-vertex.glsl"), assets::open("/shaders/sprite-fragment.glsl"));
     MyUniform uniform;
 
     while (!glfwWindowShouldClose(window))
@@ -77,13 +85,15 @@ int main(void)
         float ratio = width / (float)height;
 
         glViewport(0, 0, width, height);
+        glClearColor(1.0, 1.0, 1.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        uniform.MVP = glm::ortho(-ratio, ratio, -1.f, 1.f);
+        uniform.MVP  = glm::ortho(-ratio, ratio, -1.f, 1.f);
+        uniform.uTex = texture;
 
         pr.set_attribs(verticies);
         pr.set_uniform(uniform);
-        pr.execute(glespp::geom_topology::triangles, 0, 3);
+        pr.execute(glespp::geom_topology::triangle_strip, 0, 4);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

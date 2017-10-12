@@ -27,29 +27,29 @@ enum class cubemap_face {
 namespace pixel_format {
 
 struct luminance {
-    unsigned char l : 8;
+    unsigned char l;
 };
 
 struct alpha {
-    unsigned char a : 8;
+    unsigned char a;
 };
 
 struct luminance_alpha {
-    unsigned char l : 8;
-    unsigned char a : 8;
+    unsigned char l;
+    unsigned char a;
 };
 
 struct rgb888 {
-    unsigned char r : 8;
-    unsigned char g : 8;
-    unsigned char b : 8;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
 };
 
 struct rgba8888 {
-    unsigned char r : 8;
-    unsigned char g : 8;
-    unsigned char b : 8;
-    unsigned char a : 8;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unsigned char a;
 };
 
 struct rgba4444 {
@@ -75,11 +75,11 @@ struct rgb565 {
 template<typename pixel_t>
 struct pixel_traits;
 
-#define ADD_PIXEL_TRAIT(pixel_type, gl_type, gl_format, exp_size) \
+#define ADD_PIXEL_TRAIT(pixel_type, gl_format, gl_type, exp_size) \
     template<>                                                    \
     struct pixel_traits<pixel_type> {                             \
-        static const GLenum type   = gl_type;                     \
         static const GLenum format = gl_format;                   \
+        static const GLenum type   = gl_type;                     \
     };                                                            \
     static_assert(sizeof(pixel_type) == exp_size, "Unexpected size")
 
@@ -118,24 +118,61 @@ static const GLenum tex_targets_cubemap[] = {
     GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
     GL_NONE,
 };
+
+class texture_base {
+public:    
+    texture_base() 
+        : _id(0)
+        , _type(GL_TEXTURE_2D)
+    {}
+    GLuint get_id()     const { return _id;   }
+    GLenum get_target() const { return _type; }
+protected:
+    GLuint  _id;
+    GLenum  _type;
+};
+
 }
 
+class texture_ref {
+public:
+    texture_ref()
+        : id(0)
+        , target(GL_TEXTURE_2D)
+    {}
+    texture_ref(const detail::texture_base& t)
+        : id(t.get_id())
+        , target(t.get_target())
+    {}
+
+    GLuint id;
+    GLenum target;
+};
+
+
 template<typename pixel_t>
-class texture {
+class texture : public detail::texture_base {
 public:
     typedef pixel_t pixel_type;
 
+    texture()
+        : _teximage_targets(detail::tex_targets_2d)
+    {}
+
     texture(uint32_t w, uint32_t h, mips m = mips::one, textue_dims dims = textue_dims::t2d) 
-        : _id(0)
-        , _type(detail::textue_dims2gl_enum(dims))
-        , _teximage_targets(detail::tex_targets_2d)
+        : _teximage_targets(detail::tex_targets_2d)
     {
-        glGenTextures(1, &_id);
-        glBindTexture(_type, _id);
+        _type = detail::textue_dims2gl_enum(dims);
+        glGenTextures(1, &this->_id);
+        glBindTexture(_type, this->_id);
 
         uint32_t min_ext = std::min(w, h);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         if (mips::all != m) {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             min_ext = 1;
+        } else {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         }
 
         if (dims == textue_dims::cubemap) {
@@ -144,6 +181,7 @@ public:
 
         GLenum format = pixel_format::pixel_traits<pixel_type>::format;
         GLenum type   = pixel_format::pixel_traits<pixel_type>::type;
+
 
         for (; min_ext; w >>= 1, h >>= 1, min_ext >>= 1) {
             for(const GLenum* target = _teximage_targets; GL_NONE != *target; ++target) {
@@ -181,11 +219,7 @@ public:
         glTexSubImage2D(gl_face, level, xoffset, yoffset, w, h, format, type, data);
     }
 
-    GLuint get_id() { return _id; }
-
 private:
-    GLuint  _id;
-    GLenum  _type;
     const GLenum* _teximage_targets;
 };
 

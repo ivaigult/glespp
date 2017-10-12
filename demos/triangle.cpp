@@ -62,7 +62,7 @@ int main(void)
         { {0.f,    0.6f }, { 0.f, 0.f, 1.f} }
     };
 
-    glespp::program<MyVertex, MyUniform> pr(assets::open("/shaders/vertex.glsl"), assets::open("/shaders/fragment.glsl"));
+    glespp::program<MyVertex, MyUniform> pr(assets::open("/shaders/colored-vertex.glsl"), assets::open("/shaders/colored-fragment.glsl"));
     MyUniform uniform;
 
     while (!glfwWindowShouldClose(window))

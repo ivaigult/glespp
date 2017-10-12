@@ -2,6 +2,8 @@
 
 #include <glad/glad.h>
 
+#include <texture.hpp>
+
 namespace glespp {
 namespace detail {
 
@@ -52,6 +54,7 @@ private:
         set_uniform(std::vector<name_location>& uniformRemap)
             : _remap(uniformRemap)
             , _index(0u)
+            , _tex_slot(0)
         {}
 
         void operator()(const char*, const float& val)     { glUniform1f(_remap[_index].location, val);                                   ++_index; }
@@ -61,9 +64,18 @@ private:
         void operator()(const char*, const glm::mat2& m)   { glUniformMatrix2fv(_remap[_index].location, 1, GL_FALSE, glm::value_ptr(m)); ++_index; }
         void operator()(const char*, const glm::mat3& m)   { glUniformMatrix3fv(_remap[_index].location, 1, GL_FALSE, glm::value_ptr(m)); ++_index; }
         void operator()(const char*, const glm::mat4& m)   { glUniformMatrix4fv(_remap[_index].location, 1, GL_FALSE, glm::value_ptr(m)); ++_index; }
+        
+        void operator()(const char*, const glespp::texture_ref& tr) {
+            GLenum tex_slot_enum = GL_TEXTURE0 + _tex_slot;
+            glActiveTexture(tex_slot_enum);
+            glBindTexture(tr.target, tr.id);
+            glUniform1i(_remap[_index].location, _tex_slot);
+            ++_tex_slot;
+        }
     private:
         std::vector<name_location>& _remap;
         GLuint                      _index;
+        GLuint                      _tex_slot;
     };
 
     std::vector<name_location> _uniformRemap;
