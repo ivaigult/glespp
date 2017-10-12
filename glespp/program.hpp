@@ -63,6 +63,7 @@ public:
             info_log.resize(info_log_len + 1);
 
             glGetShaderInfoLog(_id, (GLsizei)info_log.size(), nullptr, info_log.data());
+            OutputDebugStringA(info_log.data());
             throw std::runtime_error(std::string("Compilation failed: \n") + info_log.data());
         }
     }
@@ -153,14 +154,19 @@ public:
     template<typename index_t>
     void execute(geom_topology t, buffer_object<index_t>& indices, size_t start, size_t count) {
         glUseProgram(_id);
-        _ubo.Set(_uniform);
+        _ubo.set(_uniform);
         glBindBuffer(GL_ARRAY_BUFFER, _attribs);
         detail::vao_guard<vertex_type> guard(_vao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.GetId());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.get_id());
 
         GLenum mode = geom_topology2gl_enum(t);
         GLenum type = gl_type_traits<index_t>::type;
-        glDrawElements(mode, (GLsizei)size, type, (void*) sizeof(IndexType)*start);
+        glDrawElements(
+            mode, 
+            static_cast<GLsizei>(indices.size() - start), 
+            type, 
+            reinterpret_cast<void*>(sizeof(index_t)*start)
+        );
     }
 
     void execute(geom_topology t, size_t start, size_t size) {

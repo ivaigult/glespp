@@ -63,9 +63,6 @@ int main(void)
         { { -1.f,  1.f }, { 0.f, 1.f} },
         { { 1.f,   1.f }, { 1.f, 1.f} },
     };
-
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
                 
     glespp::texture<glespp::pixel_format::rgb888> texture(2, 2);
 

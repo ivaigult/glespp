@@ -11,14 +11,16 @@ public:
     typedef element_t* element_pointer;
 
     buffer_object(std::initializer_list<element_type> il) {
-        size_t size = il.size() * sizeof(element_type);
+        _size = il.size();
+        size_t gpubuf_size = _size * sizeof(element_type);
         glGenBuffers(1, &_id);
         glBindBuffer(GL_ARRAY_BUFFER, _id);
-        glBufferData(GL_ARRAY_BUFFER, (GLsizei)size, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, (GLsizei)gpubuf_size, nullptr, GL_DYNAMIC_DRAW);
         update(0, il);
     }
 
     buffer_object(size_t size) {
+        _size = size
         glGenBuffer(1, &_id);
         glBindBuffer(GL_ARRAY_BUFFER, _id);
         glBufferData(GL_ARRAY_BUFFER, sizeof(element_type) * size, nullptr, GL_DYNAMIC_DRAW);
@@ -49,8 +51,10 @@ public:
         glBufferSubData(GL_ARRAY_BUFFER, GLsizei(offset), size, ptr);
     }
 
-    GLuint get_id() const { return _id; }
+    GLuint get_id() const { return _id;   }
+    size_t size()   const { return _size; }
 private:
     GLuint _id;
+    size_t _size = 0;
 };
 } // glespp

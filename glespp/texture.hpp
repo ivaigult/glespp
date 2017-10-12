@@ -162,6 +162,12 @@ public:
     texture(uint32_t w, uint32_t h, mips m = mips::one, textue_dims dims = textue_dims::t2d) 
         : _teximage_targets(detail::tex_targets_2d)
     {
+        static bool s_unpack_alignment_set = false;
+        if (!s_unpack_alignment_set) {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            s_unpack_alignment_set = true;
+        }
+
         _type = detail::textue_dims2gl_enum(dims);
         glGenTextures(1, &this->_id);
         glBindTexture(_type, this->_id);

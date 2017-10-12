@@ -2,9 +2,16 @@
 
 #include <glad/glad.h>
 
-struct PipelineState {
-    struct {
-        glm::vec4 color;
+namespace glespp {
 
-    } blend;
+enum class cull_mode {
+    off,
+    clockwise,
+    counter_clockwise,
 };
+
+class pipeline_state {
+
+};
+
+}
