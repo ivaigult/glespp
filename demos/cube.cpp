@@ -85,7 +85,6 @@ int main(void)
         { {-1.f,  1.f, -1.f}, { 1.f, 1.f, 0.f} },
         { {-1.f,  1.f,  1.f}, { 1.f, 1.f, 0.f} },
         // negative-y (red)
-
         { { 1.f, -1.f,  1.f}, { 1.f, 0.f, 0.f} },
         { {-1.f, -1.f, -1.f}, { 1.f, 0.f, 0.f} },
         { { 1.f, -1.f, -1.f}, { 1.f, 0.f, 0.f} },
@@ -106,7 +105,6 @@ int main(void)
         { { 1.f,  1.f, -1.f}, { 0.f, 0.f, 1.f} },
         { { 1.f, -1.f, -1.f}, { 0.f, 0.f, 1.f} },
         { {-1.f, -1.f, -1.f}, { 0.f, 0.f, 1.f} },
-
     };
 
     glespp::program<CubeVertex, MyUniform> pr(
