@@ -2,6 +2,11 @@
 
 #include <glad/glad.h>
 
+#include "detail/type_traits.hpp"
+#include "detail/va_object.hpp"
+#include "detail/ub_object.hpp"
+#include "vb_object.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -11,11 +16,6 @@
 #include <type_traits>
 
 #include <cassert>
-
-#include "detail/type_traits.hpp"
-#include "detail/va_object.hpp"
-#include "detail/ub_object.hpp"
-#include "vb_object.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -167,6 +167,11 @@ public:
             type, 
             reinterpret_cast<void*>(sizeof(index_t)*start)
         );
+    }
+
+    template<typename index_t>
+    void execute(geom_topology t, buffer_object<index_t>& indices) {
+        execute(t, indices, 0, indices.size());
     }
 
     void execute(geom_topology t, size_t start, size_t size) {

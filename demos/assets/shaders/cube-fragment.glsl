@@ -1,8 +1,8 @@
-#version 110
+#version 130
 
-varying vec2 varTexCoord;
+varying   vec3 varCol;
 
 void main()
 {
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    gl_FragColor = vec4(varCol, 1.0);
 }

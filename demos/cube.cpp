@@ -22,7 +22,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 }
 
 DEF_REFLECTABLE(CubeVertex,
-    (glm::vec3, vPos)
+    (glm::vec3, vPos),
+    (glm::vec3, vColor)
 );
 
 DEF_REFLECTABLE(MyUniform,
@@ -55,24 +56,57 @@ int main(void)
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     glfwSwapInterval(1);
     
-    glespp::buffer_object<CubeVertex> verticies = {
-        { { -1.f, -1.f, -1.f } }, // <- 0
-        { { -1.f,  1.f, -1.f } }, // <- 1
-        { {  1.f, -1.f, -1.f } }, // <- 2
-        { {  1.f,  1.f, -1.f } }, // <- 3
-        { { -1.f, -1.f,  1.f } }, // <- 4
-        { { -1.f,  1.f,  1.f } }, // <- 5
-        { {  1.f, -1.f,  1.f } }, // <- 6
-        { {  1.f,  1.f,  1.f } }, // <- 7
-    };
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_CW);
+    glFrontFace(GL_FRONT);
 
-    glespp::buffer_object<uint16_t> indices = {
-        0, 1, 2,   2, 1, 3, // face-0
-        1, 5, 3,   3, 5, 7, // face-1
-        5, 4, 6,   6, 7, 5, // face-2
-        4, 0, 6,   6, 2, 0, // face-3
-        4, 5, 1,   1, 0, 4, // face-4
-        2, 3, 6,   6, 7, 3  // face-5
+    glespp::buffer_object<CubeVertex> verticies = {
+        // positive-x (pink)
+        { { 1.f,  1.f,  1.f },{ 0.f, 1.f, 1.f } },
+        { { 1.f, -1.f, -1.f },{ 0.f, 1.f, 1.f } },
+        { { 1.f,  1.f, -1.f },{ 0.f, 1.f, 1.f } },
+        { { 1.f, -1.f, -1.f },{ 0.f, 1.f, 1.f } },
+        { { 1.f,  1.f,  1.f },{ 0.f, 1.f, 1.f } },
+        { { 1.f, -1.f,  1.f },{ 0.f, 1.f, 1.f } },
+        // negative-x (light-blue)
+        { {-1.f, -1.f, -1.f}, { 1.f, 0.f, 1.f} },
+        { {-1.f, -1.f,  1.f}, { 1.f, 0.f, 1.f} },
+        { {-1.f,  1.f,  1.f}, { 1.f, 0.f, 1.f} },
+        { {-1.f, -1.f, -1.f}, { 1.f, 0.f, 1.f} },
+        { {-1.f,  1.f,  1.f}, { 1.f, 0.f, 1.f} },
+        { {-1.f,  1.f, -1.f}, { 1.f, 0.f, 1.f} },
+        // postivie-y (yellow)
+        { { 1.f,  1.f,  1.f}, { 1.f, 1.f, 0.f} },
+        { { 1.f,  1.f, -1.f}, { 1.f, 1.f, 0.f} },
+        { {-1.f,  1.f, -1.f}, { 1.f, 1.f, 0.f} },
+        { { 1.f,  1.f,  1.f}, { 1.f, 1.f, 0.f} },
+        { {-1.f,  1.f, -1.f}, { 1.f, 1.f, 0.f} },
+        { {-1.f,  1.f,  1.f}, { 1.f, 1.f, 0.f} },
+        // negative-y (red)
+
+        { { 1.f, -1.f,  1.f}, { 1.f, 0.f, 0.f} },
+        { {-1.f, -1.f, -1.f}, { 1.f, 0.f, 0.f} },
+        { { 1.f, -1.f, -1.f}, { 1.f, 0.f, 0.f} },
+        { { 1.f, -1.f,  1.f}, { 1.f, 0.f, 0.f} },
+        { {-1.f, -1.f,  1.f}, { 1.f, 0.f, 0.f} },
+        { {-1.f, -1.f, -1.f}, { 1.f, 0.f, 0.f} },
+        // positive-z (green)
+        { {-1.f,  1.f,  1.f}, { 0.f, 1.f, 0.f} },
+        { {-1.f, -1.f,  1.f}, { 0.f, 1.f, 0.f} },
+        { { 1.f, -1.f,  1.f}, { 0.f, 1.f, 0.f} },
+        { { 1.f,  1.f,  1.f}, { 0.f, 1.f, 0.f} },
+        { {-1.f,  1.f,  1.f}, { 0.f, 1.f, 0.f} },
+        { { 1.f, -1.f,  1.f}, { 0.f, 1.f, 0.f} },
+        // negative-z (blue)
+        { { 1.f,  1.f, -1.f}, { 0.f, 0.f, 1.f} },
+        { {-1.f, -1.f, -1.f}, { 0.f, 0.f, 1.f} },
+        { {-1.f,  1.f, -1.f}, { 0.f, 0.f, 1.f} },
+        { { 1.f,  1.f, -1.f}, { 0.f, 0.f, 1.f} },
+        { { 1.f, -1.f, -1.f}, { 0.f, 0.f, 1.f} },
+        { {-1.f, -1.f, -1.f}, { 0.f, 0.f, 1.f} },
+
     };
 
     glespp::program<CubeVertex, MyUniform> pr(
@@ -88,11 +122,10 @@ int main(void)
         glfwGetFramebufferSize(window, &width, &height);
         float aspect = width / (float)height;
 
-
         glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         uniform.MVP = glm::mat4(1.0);
         uniform.MVP = glm::translate(uniform.MVP, glm::vec3(0.0, 0.0, -10.f));
@@ -100,12 +133,11 @@ int main(void)
         uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime() / 2.f, glm::vec3(1.0, 0.0, 0.0));
         uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime() / 4.f, glm::vec3(0.0, 0.0, 1.0));
         uniform.MVP = glm::perspective(45.0f, aspect, .1f, 100.f) * uniform.MVP;
-        
                 
         pr.set_attribs(verticies);
         pr.set_uniform(uniform);
 
-        pr.execute(glespp::geom_topology::triangles, indices, 0, indices.size());
+        pr.execute(glespp::geom_topology::triangles, 0, verticies.size());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
