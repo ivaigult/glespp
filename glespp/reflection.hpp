@@ -10,6 +10,8 @@
 #define __PP_DEFER_1(fn) fn __PP_EMPTY __PP_EMPTY () ()
 #define __PP_DEFER_2(fn) fn __PP_EMPTY __PP_EMPTY __PP_EMPTY () () ()
 
+#define PP_CONS(el, list)  (el, __PP_EVAL(__PP_EVAL list))
+
 #define PP_ARG_LEN(...) __PP_EVAL(__PP_ARG_LEN(__VA_ARGS__, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
 #define __PP_ARG_LEN(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, num_args, ...) num_args
 
