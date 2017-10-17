@@ -27,8 +27,8 @@
 #define __PP_FOR_EACH_11(fn, x, ...) fn(x) __PP_EVAL(__PP_FOR_EACH_10(fn, __VA_ARGS__))
 #define __PP_FOR_EACH_12(fn, x, ...) fn(x) __PP_EVAL(__PP_FOR_EACH_11(fn, __VA_ARGS__))
 
-#define PP_FOR_EACH(FN, ...) __PP_FOR_EACH(PP_ARG_LEN(__VA_ARGS__), FN, ##__VA_ARGS__)
-#define __PP_FOR_EACH(N, FN, ...) __PP_EVAL(__PP_CAT(__PP_FOR_EACH_, N) (FN, ##__VA_ARGS__))
+#define PP_FOR_EACH(fn, ...) __PP_FOR_EACH(PP_ARG_LEN(__VA_ARGS__), fn, ##__VA_ARGS__)
+#define __PP_FOR_EACH(n, fn, ...) __PP_EVAL(__PP_CAT(__PP_FOR_EACH_, n) (fn, ##__VA_ARGS__))
 
 #define PP_IMPL_VISIT(type_field_pair) __PP_EVAL(__PP_IMPL_VISIT type_field_pair)
 #define __PP_IMPL_VISIT(type, field_name) visitor(#field_name, field_name);
