@@ -1,4 +1,5 @@
-#version 130 
+#version 100
+
 uniform mat4 MVP;
 
 attribute vec3 vPos;

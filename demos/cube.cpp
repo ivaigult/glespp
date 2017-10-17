@@ -21,7 +21,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-DEF_REFLECTABLE(CubeVertex,
+DEF_REFLECTABLE(cube_vertex,
     (glm::vec3, vPos),
     (glm::vec3, vColor)
 );
@@ -40,16 +40,17 @@ int main(void)
         exit(EXIT_FAILURE);
     }
 
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);  
 
-    window = glfwCreateWindow(480, 480, "Texture example", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Texture example", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
-
+    
     glfwSetKeyCallback(window, key_callback);
 
     glfwMakeContextCurrent(window);
@@ -62,7 +63,7 @@ int main(void)
     glCullFace(GL_CW);
     glFrontFace(GL_FRONT);
 
-    glespp::buffer_object<CubeVertex> verticies = {
+    glespp::buffer_object<cube_vertex> verticies = {
         // positive-x (pink)
         { { 1.f,  1.f,  1.f },{ 0.f, 1.f, 1.f } },
         { { 1.f, -1.f, -1.f },{ 0.f, 1.f, 1.f } },
@@ -107,7 +108,7 @@ int main(void)
         { {-1.f, -1.f, -1.f}, { 0.f, 0.f, 1.f} },
     };
 
-    glespp::program<CubeVertex, MyUniform> pr(
+    glespp::program<cube_vertex, MyUniform> pr(
         assets::open("/shaders/cube-vertex.glsl"), 
         assets::open("/shaders/cube-fragment.glsl")
     );

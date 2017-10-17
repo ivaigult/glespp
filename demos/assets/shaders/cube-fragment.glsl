@@ -1,4 +1,4 @@
-#version 130
+#version 100
 
 varying   vec3 varCol;
 
