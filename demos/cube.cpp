@@ -114,7 +114,7 @@ int main(void)
     );
     
     MyUniform uniform;
-
+    
     while (!glfwWindowShouldClose(window))
     {
         int width, height;
