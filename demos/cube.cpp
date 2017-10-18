@@ -57,11 +57,11 @@ int main(void)
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     glfwSwapInterval(1);
     
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_CW);
-    glFrontFace(GL_FRONT);
+    glespp::pipeline_state state;
+    state.depth.enabled = glespp::boolean::on;
+    state.blend.enabled = glespp::boolean::off;
+    state.rasterization.enabled = glespp::boolean::on;
+    state.apply();
 
     glespp::buffer_object<cube_vertex> verticies = {
         // positive-x (pink)

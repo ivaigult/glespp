@@ -36,7 +36,13 @@
 
 
 #define PP_IMPL_STATE_APPLY(cookie, type_name_def_apply) __PP_EVAL(__PP_IMPL_STATE_APPLY type_name_def_apply)
-#define __PP_IMPL_STATE_APPLY(type, name, def, apply) apply;
+#define __PP_IMPL_STATE_APPLY(type, name, def, apply) do { \
+        static type prev_ ## name = def; \
+        if (!(prev_ ## name == name)) {  \
+            apply;                       \
+            prev_ ## name = name;        \
+        }                                \
+    } while(0);
 
 #define DEF_STATE_GROUP(name, ...)                              \
     struct name {                                               \
@@ -44,6 +50,8 @@
             PP_FOR_EACH(PP_IMPL_STATE_INIT, _, ##__VA_ARGS__);  \
         }                                                       \
         PP_FOR_EACH(PP_IMPL_STATE_MEMBER, _, ##__VA_ARGS__);    \
+    private:                                                    \
+        friend struct pipeline_state;                           \
         void apply() const {                                    \
             PP_FOR_EACH(PP_IMPL_STATE_APPLY, _, ##__VA_ARGS__); \
         }                                                       \
@@ -141,7 +149,7 @@ struct stencil_param
     stencil_op   sfail;
     stencil_op   dpfail;
     stencil_op   dppass;
-    bool operator=(const stencil_param& that) const {
+    bool operator==(const stencil_param& that) const {
         return func   == that.func    &&
                ref    == that.ref     &&
                mask   == that.mask    &&
@@ -149,6 +157,8 @@ struct stencil_param
                dpfail == that.dpfail &&
                dppass == that.dppass;
     }
+private:
+    friend struct stencil_state;
     void apply(GLenum face) const {
         glStencilFuncSeparate(face, detail::stencil_func2gl(func), ref, mask);
         glStencilOpSeparate(face, 
@@ -189,6 +199,8 @@ struct blend_equation_separate {
     blend_equation rgb;
     blend_equation alpha;
     bool operator==(const blend_equation_separate& that) const { return rgb == that.rgb && alpha == that.alpha; }
+private:
+    friend struct blending_state;
     void apply() const { glBlendEquationSeparate(detail::blend_equation2gl(rgb), detail::blend_equation2gl(alpha)); }
 };
 
@@ -217,9 +229,36 @@ DEF_STATE_GROUP(blending_state,
     (boolean,                 enabled,  boolean::off,                  detail::glSwitch(GL_BLEND, detail::boolean2gl(enabled))),
     (glm::vec4,               color,    glm::vec4(0.f, 0.f, 0.f, 0.f), glBlendColor(color.r, color.g, color.b, color.a) ),
     (blend_equation_separate, equation, 
-        blend_equation_separate({blend_equation::add, blend_equation::add }), equation.apply()),
+        blend_equation_separate({ blend_equation::add, blend_equation::add }), equation.apply()),
     (blend_function_separate, function, 
-        blend_function_separate({ blend_function::one, blend_function::one, blend_function::zero, blend_function::zero}), function.apply())
+        blend_function_separate({ blend_function::one, blend_function::one, blend_function::zero, blend_function::zero }), function.apply())
 );
 
+struct pipeline_state {
+    rasterization_state rasterization;
+    depth_state         depth;
+    stencil_state       stencil;
+    blending_state      blend;
+    
+    void apply() const {
+        rasterization.apply();
+        depth.apply();
+        stencil.apply();
+        blend.apply();
+    }
+};
+
 } // glespp
+
+#undef PP_IMPL_ENUM_VALUE
+#undef __PP_IMPL_ENUM_VALUE
+#undef PP_IMPL_CONVERT
+#undef __PP_IMPL_CONVERT
+#undef DEF_STATE_ENUM
+#undef PP_IMPL_STATE_MEMBER
+#undef __PP_IMPL_STATE_MEMBER
+#undef PP_IMPL_STATE_INIT
+#undef __PP_IMPL_STATE_INIT
+#undef PP_IMPL_STATE_APPLY
+#undef __PP_IMPL_STATE_APPLY
+#undef DEF_STATE_GROUP
