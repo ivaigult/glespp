@@ -129,7 +129,7 @@ int main(void)
         assets::open("/shaders/phong-fragment.glsl")
     );
     
-    MyUniform uniform;
+    MyUniform uniform = {};
     
     while (!glfwWindowShouldClose(window))
     {

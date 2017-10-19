@@ -55,6 +55,7 @@ private:
     struct init_remap_visitor {
         init_remap_visitor(std::vector<name_location>& uniformRemap, std::string base_name = "")
             : _uniformRemap(uniformRemap)
+            , _base_name(base_name)
         {}
 
         template<typename field_t>
@@ -66,14 +67,14 @@ private:
 
         template<typename field_t>
         void operator() (std::true_type, const char* name, const field_t& field) {
-            init_remap_visitor visitor(_uniformRemap, _base_name + std::string(name) + ".");
+            init_remap_visitor visitor(_uniformRemap, _base_name + name + ".");
             field.foreach_member(visitor);
         }
 
         template<typename field_t>
         void operator() (std::false_type, const char* name, const field_t& field) {
             name_location info = {};
-            info.name          = name;
+            info.name          = _base_name + name;
             info.location      = -1;
 
             _uniformRemap.push_back(info);
