@@ -13,7 +13,7 @@ public:
     typedef uniform_t uniform_type;
 
     unibofrm_buffer() {
-        init_remap visitor(_uniformRemap);
+        init_remap_visitor visitor(_uniformRemap);
         static_cast<uniform_type*>(nullptr)->foreach_member(visitor);
     }
 
@@ -24,7 +24,7 @@ public:
     }
 
     void set(const uniform_type& uniform) {
-        set_uniform visitor(_uniformRemap);
+        set_uniform_visitor visitor(_uniformRemap);
         uniform.foreach_member(visitor);
     }
 
@@ -34,8 +34,8 @@ private:
         GLint       location;
     };
 
-    struct init_remap {
-        init_remap(std::vector<name_location>& uniformRemap)
+    struct init_remap_visitor {
+        init_remap_visitor(std::vector<name_location>& uniformRemap)
             : _uniformRemap(uniformRemap)
         {}
         template<typename field_t>
@@ -50,8 +50,8 @@ private:
         std::vector<name_location>& _uniformRemap;
     };
 
-    struct set_uniform {
-        set_uniform(std::vector<name_location>& uniformRemap)
+    struct set_uniform_visitor {
+        set_uniform_visitor(std::vector<name_location>& uniformRemap)
             : _remap(uniformRemap)
             , _index(0u)
             , _tex_slot(0)
