@@ -57,7 +57,8 @@ DEF_REFLECTABLE(light,
 );
 
 DEF_REFLECTABLE(MyUniform,
-    (glm::mat4, MVP)
+    (glm::mat4, MVP),
+    (light,     light0)
 );
 
 int main(void)
