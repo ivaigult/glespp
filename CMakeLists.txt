@@ -10,9 +10,10 @@ target_include_directories(glespp INTERFACE glespp)
 
 function(add_demo name)
     add_executable(${name} demos/${name}.cpp)
-    target_link_libraries(${name} glespp glfw glad glm gli assets)
+    target_link_libraries(${name} glespp glfw glad glm gli assets assimp)
 endfunction()
 
 add_demo(triangle)
 add_demo(texture)
 add_demo(cube)
+add_demo(phong)
