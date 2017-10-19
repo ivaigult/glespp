@@ -15,3 +15,10 @@ add_subdirectory(glm)
 
 add_library(gli INTERFACE)
 target_include_directories(gli INTERFACE gli)
+
+set(BUILD_SHARED_LIBS  OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+add_subdirectory(assimp)
+
+
+target_include_directories(assimp PUBLIC assimp/include $<TARGET_PROPERTY:assimp,BINARY_DIR>/../include)
