@@ -1,6 +1,6 @@
 #pragma once
 
-#include "reflection.hpp"
+#include "detail/cpp_foreach.hpp"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
