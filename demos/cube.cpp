@@ -58,8 +58,8 @@ int main(void)
     glfwSwapInterval(1);
     
     glespp::pipeline_state state;
-    state.depth.enabled = glespp::boolean::on;
-    state.blend.enabled = glespp::boolean::off;
+    state.depth.enabled         = glespp::boolean::on;
+    state.blend.enabled         = glespp::boolean::off;
     state.rasterization.enabled = glespp::boolean::on;
     state.apply();
 

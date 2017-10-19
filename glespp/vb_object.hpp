@@ -10,6 +10,16 @@ public:
     typedef element_t  element_type;
     typedef element_t* element_pointer;
 
+    template<typename IteratorT>
+    buffer_object(IteratorT begin, IteratorT end) {
+        size_t size = static_cast<size_t>(std::distance(begin, end));
+        _size = size;
+        glGenBuffers(1, &_id);
+        glBindBuffer(GL_ARRAY_BUFFER, _id);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(element_type) * size, nullptr, GL_DYNAMIC_DRAW);
+        update(0, begin, end);
+    }
+
     buffer_object(std::initializer_list<element_type> il) {
         _size = il.size();
         size_t gpubuf_size = _size * sizeof(element_type);
@@ -20,8 +30,8 @@ public:
     }
 
     buffer_object(size_t size) {
-        _size = size
-        glGenBuffer(1, &_id);
+        _size = size;
+        glGenBuffers(1, &_id);
         glBindBuffer(GL_ARRAY_BUFFER, _id);
         glBufferData(GL_ARRAY_BUFFER, sizeof(element_type) * size, nullptr, GL_DYNAMIC_DRAW);
     }
