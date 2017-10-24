@@ -45,8 +45,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 }
 
 DEF_REFLECTABLE(my_vertex,
-    (glm::vec3, vPos),
-    (glm::vec3, vNorm)
+    (glm::vec3, aPos),
+    (glm::vec3, aNorm)
 );
 
 DEF_REFLECTABLE(light,
@@ -56,9 +56,18 @@ DEF_REFLECTABLE(light,
     (glm::vec4, specular)
 );
 
+DEF_REFLECTABLE(material,
+    (glm::vec4, ambient),
+    (glm::vec4, diffuse),
+    (glm::vec4, specular)
+);
+
 DEF_REFLECTABLE(MyUniform,
-    (glm::mat4, MVP),
-    (light,     light0)
+    (glm::mat4, uMVP),
+    (glm::mat4, uMV),
+    (glm::mat4, uNormal),
+    (material,  uMaterial),
+    (light,     uLight)
 );
 
 int main(void)
@@ -75,7 +84,7 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);  
 
-    window = glfwCreateWindow(640, 480, "Texture example", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Phong example", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -130,7 +139,11 @@ int main(void)
     );
     
     MyUniform uniform = {};
-    
+    uniform.uLight.position    = glm::vec4(0.0, 0.0, 0.0, 1.0);
+    uniform.uMaterial.diffuse  = glm::vec4(0.4, 0.4, 0.4, 1.0);
+    uniform.uMaterial.ambient  = glm::vec4(0.1, 0.1, 0.3, 1.0);
+    uniform.uMaterial.specular = glm::vec4(0.5, 0.1, 0.1, 1.0);
+
     while (!glfwWindowShouldClose(window))
     {
         int width, height;
@@ -140,13 +153,14 @@ int main(void)
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        uniform.MVP = glm::mat4(1.0);
-        uniform.MVP = glm::translate(uniform.MVP, camera_pos);
-        uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime() / 1.f, glm::vec3(0.0, 1.0, 0.0));
+        uniform.uMV = glm::mat4(1.0);
+        uniform.uMV = glm::translate(uniform.uMV, camera_pos);
+        uniform.uMV = glm::rotate(uniform.uMV, (float)glfwGetTime() / 1.f, glm::vec3(0.0, 1.0, 0.0));
         // uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime() / 2.f, glm::vec3(1.0, 0.0, 0.0));
         // uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime() / 4.f, glm::vec3(0.0, 0.0, 1.0));
-        uniform.MVP = glm::perspective(45.0f, aspect, .1f, 100.f) * uniform.MVP;
-                
+        uniform.uNormal = glm::transpose(glm::inverse(uniform.uMV));
+        uniform.uMVP = glm::perspective(45.0f, aspect, .1f, 100.f) * uniform.uMV;
+                        
         pr.set_attribs(verticies);
         pr.set_uniform(uniform);
 

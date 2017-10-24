@@ -1,13 +1,18 @@
 #version 100
 
-uniform mat4 MVP;
+attribute vec3 aPos;
+attribute vec3 aNorm;
 
-attribute vec3 vPos;
-attribute vec3 vNorm;
-varying   vec3 varCol;
+uniform mat4 uMVP;
+uniform mat4 uMV;
+uniform mat4 uNormal;
+
+varying vec3 vPos;
+varying vec3 vNorm;
 
 void main()
 {
-    gl_Position = MVP * vec4(vPos, 1.0);
-	varCol = vNorm;
+	vNorm = (uNormal * vec4(aNorm, 0.0)).xyz;
+	vPos  = (uMV * vec4(aPos, 1.0)).xyz;
+	gl_Position = uMVP * vec4(aPos, 1.0);
 }
