@@ -98,7 +98,7 @@ int main(void)
     glfwSwapInterval(1);
     
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile("C:\\Users\\sys_avctests\\workspace\\xxx\\demos\\assets\\meshes\\bunny.obj", aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals);
+    const aiScene* scene = importer.ReadFile("bunny.obj", aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals);
 
     std::vector<my_vertex> cpu_verticies;
 
