@@ -1,5 +1,7 @@
 project(xxx)
 
+set(CMAKE_CXX_STANDARD 11)
+
 add_subdirectory(dependencies)
 
 include(compile_assets/compile_assets.cmake)

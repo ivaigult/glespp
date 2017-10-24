@@ -61,7 +61,7 @@ private:
         template<typename field_t>
         void operator() (const char* name, const field_t& field)
         {
-            typedef has_foreach_member<field_t, init_remap_visitor>::type has_foreach_t;
+            typedef typename has_foreach_member<field_t, init_remap_visitor>::type has_foreach_t;
             (*this)(has_foreach_t{}, name, field);
         }
 
@@ -94,7 +94,7 @@ private:
         template<typename field_t>
         void operator() (const char* name, const field_t& field)
         {
-            typedef has_foreach_member<field_t, init_remap_visitor>::type has_foreach_t;
+            typedef typename has_foreach_member<field_t, init_remap_visitor>::type has_foreach_t;
             (*this)(has_foreach_t{}, name, field);
         }
 

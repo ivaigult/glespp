@@ -29,7 +29,7 @@ public:
         fragment,
     };
 
-    shader(std::istream& is, Type t) {
+    shader(std::istream&& is, Type t) {
         _source.reserve(1 << 12);
 
         GLenum shader_type = GL_VERTEX_SHADER;
@@ -63,7 +63,6 @@ public:
             info_log.resize(info_log_len + 1);
 
             glGetShaderInfoLog(_id, (GLsizei)info_log.size(), nullptr, info_log.data());
-            OutputDebugStringA(info_log.data());
             throw std::runtime_error(std::string("Compilation failed: \n") + info_log.data());
         }
     }
@@ -110,13 +109,13 @@ public:
     typedef vertex_t  vertex_type;
     typedef uniform_t uniform_type;
 
-    program(std::istream& vSource, std::istream& fSource)
+    program(std::istream&& vSource, std::istream&& fSource)
         : _id(0)
         , _uniform({})
         , _attribs(0u)
     {
-        detail::shader vertex_sh(vSource, detail::shader::vertex);
-        detail::shader fragment_sh(fSource, detail::shader::fragment);
+        detail::shader vertex_sh(std::move(vSource), detail::shader::vertex);
+        detail::shader fragment_sh(std::move(fSource), detail::shader::fragment);
 
         _id = glCreateProgram();
         glAttachShader(_id, vertex_sh.get_id());

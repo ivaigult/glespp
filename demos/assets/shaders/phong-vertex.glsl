@@ -1,4 +1,4 @@
-#version 100
+#version 110
 
 attribute vec3 aPos;
 attribute vec3 aNorm;

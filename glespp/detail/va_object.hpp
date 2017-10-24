@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <set>
+#include <string>
 
 #include <glad/glad.h>
 
@@ -42,7 +43,7 @@ public:
             active_indices.insert(index);
         }
 
-        std::vector<vap_args>::iterator result = std::remove_if(
+        typename std::vector<vap_args>::iterator result = std::remove_if(
             _vaps.begin(),
             _vaps.end(),
             [&active_indices](vap_args& args) -> bool {

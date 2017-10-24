@@ -80,7 +80,6 @@ int main(void)
         exit(EXIT_FAILURE);
     }
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);  
 
@@ -98,7 +97,7 @@ int main(void)
     glfwSwapInterval(1);
     
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile("bunny.obj", aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals);
+    const aiScene* scene = importer.ReadFile(ASSETS_ROOT "/meshes/bunny.obj", aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals);
 
     std::vector<my_vertex> cpu_verticies;
 
