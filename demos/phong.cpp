@@ -156,8 +156,6 @@ int main(void)
         uniform.uMV = glm::mat4(1.0);
         uniform.uMV = glm::translate(uniform.uMV, camera_pos);
         uniform.uMV = glm::rotate(uniform.uMV, (float)glfwGetTime() / 1.f, glm::vec3(0.0, 1.0, 0.0));
-        // uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime() / 2.f, glm::vec3(1.0, 0.0, 0.0));
-        // uniform.MVP = glm::rotate(uniform.MVP, (float)glfwGetTime() / 4.f, glm::vec3(0.0, 0.0, 1.0));
         uniform.uNormal = glm::transpose(glm::inverse(uniform.uMV));
         uniform.uMVP = glm::perspective(45.0f, aspect, .1f, 100.f) * uniform.uMV;
                         
