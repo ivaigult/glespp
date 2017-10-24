@@ -118,12 +118,13 @@ private:
         void operator()(std::false_type, const char*, const glm::mat3& m)   { glUniformMatrix3fv(_remap[_index].location, 1, GL_FALSE, glm::value_ptr(m)); ++_index; }
         void operator()(std::false_type, const char*, const glm::mat4& m)   { glUniformMatrix4fv(_remap[_index].location, 1, GL_FALSE, glm::value_ptr(m)); ++_index; }
         
-        void operator()(const char*, const glespp::texture_ref& tr) {
+        void operator()(std::false_type, const char*, const glespp::texture_ref& tr) {
             GLenum tex_slot_enum = GL_TEXTURE0 + _tex_slot;
             glActiveTexture(tex_slot_enum);
             glBindTexture(tr.target, tr.id);
             glUniform1i(_remap[_index].location, _tex_slot);
             ++_tex_slot;
+            ++_index;
         }
     private:
         std::vector<name_location>& _remap;
