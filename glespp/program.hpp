@@ -138,11 +138,14 @@ public:
 
         GLenum mode = geom_topology2gl_enum(t);
         GLenum type = gl_type_traits<index_t>::type;
+        index_t* index_offset = nullptr;
+        index_offset += start;
+
         glDrawElements(
             mode, 
-            static_cast<GLsizei>(indices.size() - start), 
+            (GLsizei) count, 
             type, 
-            reinterpret_cast<void*>(sizeof(index_t)*start)
+            index_offset
         );
     }
 

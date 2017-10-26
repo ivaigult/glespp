@@ -90,15 +90,18 @@ public:
 
 private:
     DEF_REFLECTABLE(vertex_t,
-        (glm::vec2, aPosition),
-        (glm::vec2, aUV),
-        (glm::vec4, aColor)
+        (glm::vec2,   aPosition),
+        (glm::vec2,   aUV),
+        (glm::u8vec4, aColor)
     );
 
     DEF_REFLECTABLE(uniform_t, 
         (glm::mat4          , uMVP),
         (glespp::texture_ref, uTexture)
     );
+
+    static_assert(sizeof(vertex_t) == sizeof(ImDrawVert), "Unexpected size");
+    static_assert(sizeof(uint16_t) == sizeof(ImDrawIdx), "Unexpected size");
 
     imgui_state()
         : _main_window(glfwGetCurrentContext())
@@ -113,7 +116,7 @@ private:
             "void main()\n"
             "{\n"
             "	vFragUV = aUV;\n"
-            "	vFragColor = aColor;\n"
+            "	vFragColor = normalize(aColor);\n"
             "	gl_Position = uMVP * vec4(aPosition.xy, 0.0, 1.0);\n"
             "}\n",
             "#version 130\n"
@@ -163,6 +166,12 @@ private:
 
         uniform_t uniforms = {};
 
+        ImGuiIO& io = ImGui::GetIO();
+        uniforms.uMVP[0] = glm::vec4(2.0f / io.DisplaySize.x, 0.0f, 0.0f, 0.0f);
+        uniforms.uMVP[1] = glm::vec4(0.0f, 2.0f / -io.DisplaySize.y, 0.0f, 0.0f);
+        uniforms.uMVP[2] = glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+        uniforms.uMVP[3] = glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f);
+
         for (int n = 0; n < draw_data->CmdListsCount; n++)
         {
             const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -183,9 +192,10 @@ private:
                 if (pcmd->UserCallback) {
                     pcmd->UserCallback(cmd_list, pcmd);
                 } else {
-                    uniforms.uTexture = *static_cast<glespp::texture<glespp::pixel_format::rgb888>*>(pcmd->TextureId);
+                    uniforms.uTexture = *static_cast<glespp::texture<glespp::pixel_format::rgba8888>*>(pcmd->TextureId);
                     // glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
                     _program.set_uniform(uniforms);
+                    assert(start + pcmd->ElemCount <= index_buffer.size());
                     _program.execute(glespp::geom_topology::triangles, index_buffer, start, pcmd->ElemCount);
                 }
                 start += pcmd->ElemCount;
@@ -340,7 +350,6 @@ int main(void)
     state.depth.enabled         = glespp::boolean::on;
     state.blend.enabled         = glespp::boolean::off;
     state.rasterization.enabled = glespp::boolean::on;
-    state.apply();
             
     glespp::program<my_vertex, MyUniform> pr(
         assets::open("/shaders/phong-vertex.glsl"), 
@@ -371,6 +380,7 @@ int main(void)
         pr.set_attribs(verticies);
         pr.set_uniform(uniform);
 
+        state.apply();
         pr.execute(glespp::geom_topology::triangles, indices);
 
         imgui_state::new_frame();
@@ -394,7 +404,7 @@ int main(void)
             ImGui::Text("Hello from another window!");
             ImGui::End();
         }
-
+        
         // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
         if (show_test_window)
         {
