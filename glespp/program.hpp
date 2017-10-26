@@ -29,9 +29,7 @@ public:
         fragment,
     };
 
-    shader(std::istream&& is, Type t) {
-        _source.reserve(1 << 12);
-
+    shader(const char* shader_text, Type t) {
         GLenum shader_type = GL_VERTEX_SHADER;
         switch (t) {
         case vertex:
@@ -47,10 +45,6 @@ public:
             throw std::runtime_error("Failed to create shader");
         }
 
-        _source.assign((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-        _source.push_back('\0');
-
-        char* shader_text = _source.data();
         glShaderSource(_id, 1, &shader_text, nullptr);
         glCompileShader(_id);
 
@@ -63,6 +57,7 @@ public:
             info_log.resize(info_log_len + 1);
 
             glGetShaderInfoLog(_id, (GLsizei)info_log.size(), nullptr, info_log.data());
+            OutputDebugStringA(info_log.data());
             throw std::runtime_error(std::string("Compilation failed: \n") + info_log.data());
         }
     }
@@ -76,7 +71,6 @@ public:
     }
 private:
     GLuint            _id;
-    std::vector<char> _source;
 };
 } // detail
 
@@ -109,38 +103,22 @@ public:
     typedef vertex_t  vertex_type;
     typedef uniform_t uniform_type;
 
+    program(const char* v_source, const char* f_source) {
+        _init_program(v_source, f_source);
+    }
+
     program(std::istream&& vSource, std::istream&& fSource)
         : _id(0)
         , _uniform({})
         , _attribs(0u)
     {
-        detail::shader vertex_sh(std::move(vSource), detail::shader::vertex);
-        detail::shader fragment_sh(std::move(fSource), detail::shader::fragment);
+        std::vector<char> v_data((std::istreambuf_iterator<char>(vSource)), std::istreambuf_iterator<char>());
+        v_data.push_back('\0');
 
-        _id = glCreateProgram();
-        glAttachShader(_id, vertex_sh.get_id());
-        glAttachShader(_id, fragment_sh.get_id());
+        std::vector<char> fr_data((std::istreambuf_iterator<char>(fSource)), std::istreambuf_iterator<char>());
+        fr_data.push_back('\0');
 
-        _vao.pre_link(_id);
-        glLinkProgram(_id);
-        _vao.post_link(_id);
-        _ubo.post_link(_id);
-
-        glDetachShader(_id, vertex_sh.get_id());
-        glDetachShader(_id, fragment_sh.get_id());
-
-        GLint status = GL_FALSE;
-        glGetProgramiv(_id, GL_LINK_STATUS, &status);
-
-        if (GL_FALSE == status) {
-            std::vector<char> infoLog;
-            GLint infologLen = 0;
-            glGetProgramiv(_id, GL_INFO_LOG_LENGTH, &infologLen);
-            infoLog.resize(infologLen + 1);
-
-            glGetProgramInfoLog(_id, (GLsizei)infoLog.size(), nullptr, infoLog.data());
-            throw std::runtime_error(std::string("Link failed: \n") + infoLog.data());
-        }
+        _init_program(v_data.data(), fr_data.data());
     }
 
     ~program() {
@@ -184,6 +162,36 @@ public:
     }
 
 private:
+    void _init_program(const char* v_source, const char* f_source) {
+        detail::shader vertex_sh(v_source, detail::shader::vertex);
+        detail::shader fragment_sh(f_source, detail::shader::fragment);
+
+        _id = glCreateProgram();
+        glAttachShader(_id, vertex_sh.get_id());
+        glAttachShader(_id, fragment_sh.get_id());
+
+        _vao.pre_link(_id);
+        glLinkProgram(_id);
+        _vao.post_link(_id);
+        _ubo.post_link(_id);
+
+        glDetachShader(_id, vertex_sh.get_id());
+        glDetachShader(_id, fragment_sh.get_id());
+
+        GLint status = GL_FALSE;
+        glGetProgramiv(_id, GL_LINK_STATUS, &status);
+
+        if (GL_FALSE == status) {
+            std::vector<char> infoLog;
+            GLint infologLen = 0;
+            glGetProgramiv(_id, GL_INFO_LOG_LENGTH, &infologLen);
+            infoLog.resize(infologLen + 1);
+
+            glGetProgramInfoLog(_id, (GLsizei)infoLog.size(), nullptr, infoLog.data());
+            throw std::runtime_error(std::string("Link failed: \n") + infoLog.data());
+        }
+    }
+
     GLuint                                _id;
     uniform_type                          _uniform;
     GLuint                                _attribs; // TODO: what if buffer is removed?
