@@ -19,6 +19,18 @@ target_include_directories(gli INTERFACE gli)
 set(BUILD_SHARED_LIBS  OFF)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 add_subdirectory(assimp)
-
-
 target_include_directories(assimp PUBLIC assimp/include $<TARGET_PROPERTY:assimp,BINARY_DIR>/../include)
+
+add_library(imgui STATIC
+	imgui/imconfig.h
+	imgui/imgui.cpp
+	imgui/imgui.h
+	imgui/imgui_demo.cpp
+	imgui/imgui_draw.cpp
+	imgui/imgui_internal.h
+	imgui/stb_rect_pack.h
+	imgui/stb_textedit.h
+	imgui/stb_truetype.h
+)
+
+target_include_directories(imgui PUBLIC imgui)
