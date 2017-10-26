@@ -200,6 +200,7 @@ private:
                 }
                 start += pcmd->ElemCount;
             }
+            glFlush();
         }
     }
 
@@ -369,6 +370,7 @@ int main(void)
         float aspect = width / (float)height;
 
         glViewport(0, 0, width, height);
+        glClearColor(1.0, 1.0, 1.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         uniform.uMV = glm::mat4(1.0);
