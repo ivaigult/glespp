@@ -199,7 +199,7 @@ private:
     uniform_type                          _uniform;
     GLuint                                _attribs; // TODO: what if buffer is removed?
     detail::vertex_array<vertex_type>     _vao;
-    detail::unibofrm_buffer<uniform_type> _ubo;
+    detail::uniform_buffer<uniform_type>  _ubo;
 };
 
 } // glespp
