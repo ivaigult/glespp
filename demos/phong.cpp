@@ -52,24 +52,21 @@ DEF_REFLECTABLE(my_vertex,
 );
 
 DEF_REFLECTABLE(light,
-    (glm::vec4, position),
-    (glm::vec4, ambient),
-    (glm::vec4, diffuse),
-    (glm::vec4, specular)
+    (glm::vec4, position)
 );
 
-DEF_REFLECTABLE(material,
+DEF_REFLECTABLE(material_pr,
     (glm::vec4, ambient),
     (glm::vec4, diffuse),
     (glm::vec4, specular)
 );
 
 DEF_REFLECTABLE(MyUniform,
-    (glm::mat4, uMVP),
-    (glm::mat4, uMV),
-    (glm::mat4, uNormal),
-    (material,  uMaterial),
-    (light,     uLight)
+    (glm::mat4,   uMVP),
+    (glm::mat4,   uMV),
+    (glm::mat4,   uNormal),
+    (material_pr, uMaterial),
+    (light,       uLight)
 );
 
 int main(void)
@@ -172,35 +169,15 @@ int main(void)
         
 
         imgui_state::instance().new_frame();
-        static bool show_another_window = 1;
-        static bool show_test_window = 1;
-        // 1. Show a simple window
-        // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-        {
-            static float f = 0.0f;
-            ImGui::Text("Hello, world!");
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-            if (ImGui::Button("Test Window")) show_test_window ^= 1;
-            if (ImGui::Button("Another Window")) show_another_window ^= 1;
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        }
 
-        // 2. Show another simple window, this time using an explicit Begin/End pair
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);
-            ImGui::Text("Hello from another window!");
-            ImGui::End();
-        }
-        
-        // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
-        if (show_test_window)
-        {
-            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-            ImGui::ShowTestWindow(&show_test_window);
-        }
+        ImGui::Begin("Material");
+        ImGui::ColorEdit4("Diffuse", &uniform.uMaterial.diffuse.x);
+        ImGui::ColorEdit4("Ambient", &uniform.uMaterial.ambient.x);
+        ImGui::ColorEdit4("Specular", &uniform.uMaterial.specular.x);
+        ImGui::End();
 
         ImGui::Render();
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
