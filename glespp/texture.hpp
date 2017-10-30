@@ -97,7 +97,7 @@ ADD_PIXEL_TRAIT(rgb565,          GL_RGB,             GL_UNSIGNED_SHORT_5_6_5,   
 
 namespace detail {
 
-GLenum textue_dims2gl_enum(textue_dims d) {
+inline GLenum textue_dims2gl_enum(textue_dims d) {
     switch (d) {
     case textue_dims::t2d:     return GL_TEXTURE_2D;
     case textue_dims::cubemap: return GL_TEXTURE_CUBE_MAP;

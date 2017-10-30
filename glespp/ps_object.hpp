@@ -18,7 +18,7 @@
         PP_FOR_EACH(PP_IMPL_ENUM_VALUE, _, ##__VA_ARGS__)     \
     };                                                        \
     namespace detail {                                        \
-    GLenum name ## 2gl(name e) {                              \
+    static inline GLenum name ## 2gl(name e) {                \
         switch(e) {                                           \
             PP_FOR_EACH(PP_IMPL_CONVERT, name, ##__VA_ARGS__) \
             default:                                          \
