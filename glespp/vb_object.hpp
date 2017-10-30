@@ -14,9 +14,10 @@ public:
     buffer_object(IteratorT begin, IteratorT end) {
         size_t size = static_cast<size_t>(std::distance(begin, end));
         _size = size;
+        size_t gpubuf_size = _size * sizeof(element_type);
         glGenBuffers(1, &_id);
         glBindBuffer(GL_ARRAY_BUFFER, _id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(element_type) * size, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, gpubuf_size, nullptr, GL_DYNAMIC_DRAW);
         update(0, begin, end);
     }
 
@@ -43,7 +44,7 @@ public:
     template<typename IteratorT>
     void update(size_t offset, IteratorT begin, IteratorT end) {
         std::vector<element_type> data(begin, end);
-        update(offset, data.data(), data.size() * sizeof(element_type));
+        _update_raw_data(offset * sizeof(element_type), data.data(), data.size() * sizeof(element_type));
     }
 
     template<typename ValueT>
@@ -52,17 +53,17 @@ public:
     }
     
     void update(size_t offset, element_pointer begin, element_pointer end) {
-        size_t size = static_cast<size_t>(end - begin) * sizeof(element_type);
-        update(offset, begin, size);
+        size_t n = static_cast<size_t>(std::distance(begin, end));
+        _update_raw_data(offset * sizeof(element_type), begin, n * sizeof(element_type));
     }
+    GLuint get_id() const { return _id;   }
+    size_t size()   const { return _size; }
 
-    void update(size_t offset, element_pointer ptr, size_t size) {
+private:
+    void _update_raw_data(size_t offset, void* ptr, size_t size) {
         glBindBuffer(GL_ARRAY_BUFFER, _id);
         glBufferSubData(GL_ARRAY_BUFFER, GLsizei(offset), size, ptr);
     }
-
-    GLuint get_id() const { return _id;   }
-    size_t size()   const { return _size; }
 private:
     GLuint _id;
     size_t _size = 0;

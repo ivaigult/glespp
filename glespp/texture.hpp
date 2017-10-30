@@ -97,7 +97,7 @@ ADD_PIXEL_TRAIT(rgb565,          GL_RGB,             GL_UNSIGNED_SHORT_5_6_5,   
 
 namespace detail {
 
-GLenum textue_dims2gl_enum(textue_dims d) {
+inline GLenum textue_dims2gl_enum(textue_dims d) {
     switch (d) {
     case textue_dims::t2d:     return GL_TEXTURE_2D;
     case textue_dims::cubemap: return GL_TEXTURE_CUBE_MAP;
@@ -125,6 +125,13 @@ public:
         : _id(0)
         , _type(GL_TEXTURE_2D)
     {}
+
+    texture_base(const texture_base&) = delete;
+    texture_base(texture_base&& t) 
+        : _id(t._id)
+        , _type(t._type)
+    { t._id = 0; }
+    
     GLuint get_id()     const { return _id;   }
     GLenum get_target() const { return _type; }
 protected:
@@ -154,10 +161,6 @@ template<typename pixel_t>
 class texture : public detail::texture_base {
 public:
     typedef pixel_t pixel_type;
-
-    texture()
-        : _teximage_targets(detail::tex_targets_2d)
-    {}
 
     texture(uint32_t w, uint32_t h, mips m = mips::one, textue_dims dims = textue_dims::t2d) 
         : _teximage_targets(detail::tex_targets_2d)
@@ -199,6 +202,10 @@ public:
             glGenerateMipmap(_type);
         }
     }
+
+    texture(texture&& t)
+        : detail::texture_base(std::move(t))
+    {}
 
     ~texture() {
         glDeleteTextures(1, &_id);

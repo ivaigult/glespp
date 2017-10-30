@@ -10,6 +10,8 @@
 #include <assimp/scene.h> 
 #include <assimp/postprocess.h>
 
+#include <imgui_render.hpp>
+
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
@@ -50,24 +52,21 @@ DEF_REFLECTABLE(my_vertex,
 );
 
 DEF_REFLECTABLE(light,
-    (glm::vec4, position),
-    (glm::vec4, ambient),
-    (glm::vec4, diffuse),
-    (glm::vec4, specular)
+    (glm::vec4, position)
 );
 
-DEF_REFLECTABLE(material,
+DEF_REFLECTABLE(material_pr,
     (glm::vec4, ambient),
     (glm::vec4, diffuse),
     (glm::vec4, specular)
 );
 
 DEF_REFLECTABLE(MyUniform,
-    (glm::mat4, uMVP),
-    (glm::mat4, uMV),
-    (glm::mat4, uNormal),
-    (material,  uMaterial),
-    (light,     uLight)
+    (glm::mat4,   uMVP),
+    (glm::mat4,   uMV),
+    (glm::mat4,   uNormal),
+    (material_pr, uMaterial),
+    (light,       uLight)
 );
 
 int main(void)
@@ -96,6 +95,9 @@ int main(void)
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     glfwSwapInterval(1);
     
+    imgui_state::instance();
+
+
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(ASSETS_ROOT "/meshes/bunny.obj", aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals);
 
@@ -130,7 +132,6 @@ int main(void)
     state.depth.enabled         = glespp::boolean::on;
     state.blend.enabled         = glespp::boolean::off;
     state.rasterization.enabled = glespp::boolean::on;
-    state.apply();
             
     glespp::program<my_vertex, MyUniform> pr(
         assets::open("/shaders/phong-vertex.glsl"), 
@@ -150,6 +151,7 @@ int main(void)
         float aspect = width / (float)height;
 
         glViewport(0, 0, width, height);
+        glClearColor(1.0, 1.0, 1.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         uniform.uMV = glm::mat4(1.0);
@@ -161,7 +163,20 @@ int main(void)
         pr.set_attribs(verticies);
         pr.set_uniform(uniform);
 
+        state.apply();
         pr.execute(glespp::geom_topology::triangles, indices);
+
+        
+
+        imgui_state::instance().new_frame();
+
+        ImGui::Begin("Material");
+        ImGui::ColorEdit4("Diffuse", &uniform.uMaterial.diffuse.x);
+        ImGui::ColorEdit4("Ambient", &uniform.uMaterial.ambient.x);
+        ImGui::ColorEdit4("Specular", &uniform.uMaterial.specular.x);
+        ImGui::End();
+
+        ImGui::Render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

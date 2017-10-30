@@ -26,11 +26,11 @@ struct has_foreach_member {
 };
 
 template<typename uniform_t>
-class unibofrm_buffer  {
+class uniform_buffer  {
 public:
     typedef uniform_t uniform_type;
 
-    unibofrm_buffer() {
+    uniform_buffer() {
         init_remap_visitor visitor(_uniformRemap);
         static_cast<uniform_type*>(nullptr)->foreach_member(visitor);
     }

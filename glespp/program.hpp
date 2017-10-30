@@ -29,9 +29,7 @@ public:
         fragment,
     };
 
-    shader(std::istream&& is, Type t) {
-        _source.reserve(1 << 12);
-
+    shader(const char* shader_text, Type t) {
         GLenum shader_type = GL_VERTEX_SHADER;
         switch (t) {
         case vertex:
@@ -47,10 +45,6 @@ public:
             throw std::runtime_error("Failed to create shader");
         }
 
-        _source.assign((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-        _source.push_back('\0');
-
-        char* shader_text = _source.data();
         glShaderSource(_id, 1, &shader_text, nullptr);
         glCompileShader(_id);
 
@@ -63,6 +57,7 @@ public:
             info_log.resize(info_log_len + 1);
 
             glGetShaderInfoLog(_id, (GLsizei)info_log.size(), nullptr, info_log.data());
+            OutputDebugStringA(info_log.data());
             throw std::runtime_error(std::string("Compilation failed: \n") + info_log.data());
         }
     }
@@ -76,7 +71,6 @@ public:
     }
 private:
     GLuint            _id;
-    std::vector<char> _source;
 };
 } // detail
 
@@ -109,13 +103,71 @@ public:
     typedef vertex_t  vertex_type;
     typedef uniform_t uniform_type;
 
+    program(const char* v_source, const char* f_source) {
+        _init_program(v_source, f_source);
+    }
+
     program(std::istream&& vSource, std::istream&& fSource)
         : _id(0)
         , _uniform({})
         , _attribs(0u)
     {
-        detail::shader vertex_sh(std::move(vSource), detail::shader::vertex);
-        detail::shader fragment_sh(std::move(fSource), detail::shader::fragment);
+        std::vector<char> v_data((std::istreambuf_iterator<char>(vSource)), std::istreambuf_iterator<char>());
+        v_data.push_back('\0');
+
+        std::vector<char> fr_data((std::istreambuf_iterator<char>(fSource)), std::istreambuf_iterator<char>());
+        fr_data.push_back('\0');
+
+        _init_program(v_data.data(), fr_data.data());
+    }
+
+    ~program() {
+        glDeleteProgram(_id);
+    }
+
+    void set_uniform(const uniform_type& u)                    { _uniform = u;               }
+    void set_attribs(const buffer_object<vertex_type>& buffer) { _attribs = buffer.get_id(); }
+
+    template<typename index_t>
+    void execute(geom_topology t, buffer_object<index_t>& indices, size_t start, size_t count) {
+        glUseProgram(_id);
+        _ubo.set(_uniform);
+        glBindBuffer(GL_ARRAY_BUFFER, _attribs);
+        detail::vao_guard<vertex_type> guard(_vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.get_id());
+
+        GLenum mode = geom_topology2gl_enum(t);
+        GLenum type = gl_type_traits<index_t>::type;
+        index_t* index_offset = nullptr;
+        index_offset += start;
+
+        glDrawElements(
+            mode, 
+            (GLsizei) count, 
+            type, 
+            index_offset
+        );
+    }
+
+    template<typename index_t>
+    void execute(geom_topology t, buffer_object<index_t>& indices) {
+        execute(t, indices, 0, indices.size());
+    }
+
+    void execute(geom_topology t, size_t start, size_t size) {
+        glUseProgram(_id);
+        _ubo.set(_uniform);
+        glBindBuffer(GL_ARRAY_BUFFER, _attribs);
+        detail::vao_guard<vertex_type> guard(_vao);
+
+        GLenum mode = geom_topology2gl_enum(t);
+        glDrawArrays(mode, (GLint)start, (GLsizei)size);
+    }
+
+private:
+    void _init_program(const char* v_source, const char* f_source) {
+        detail::shader vertex_sh(v_source, detail::shader::vertex);
+        detail::shader fragment_sh(f_source, detail::shader::fragment);
 
         _id = glCreateProgram();
         glAttachShader(_id, vertex_sh.get_id());
@@ -143,52 +195,11 @@ public:
         }
     }
 
-    ~program() {
-        glDeleteProgram(_id);
-    }
-
-    void set_uniform(const uniform_type& u)                    { _uniform = u;               }
-    void set_attribs(const buffer_object<vertex_type>& buffer) { _attribs = buffer.get_id(); }
-
-    template<typename index_t>
-    void execute(geom_topology t, buffer_object<index_t>& indices, size_t start, size_t count) {
-        glUseProgram(_id);
-        _ubo.set(_uniform);
-        glBindBuffer(GL_ARRAY_BUFFER, _attribs);
-        detail::vao_guard<vertex_type> guard(_vao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.get_id());
-
-        GLenum mode = geom_topology2gl_enum(t);
-        GLenum type = gl_type_traits<index_t>::type;
-        glDrawElements(
-            mode, 
-            static_cast<GLsizei>(indices.size() - start), 
-            type, 
-            reinterpret_cast<void*>(sizeof(index_t)*start)
-        );
-    }
-
-    template<typename index_t>
-    void execute(geom_topology t, buffer_object<index_t>& indices) {
-        execute(t, indices, 0, indices.size());
-    }
-
-    void execute(geom_topology t, size_t start, size_t size) {
-        glUseProgram(_id);
-        _ubo.set(_uniform);
-        glBindBuffer(GL_ARRAY_BUFFER, _attribs);
-        detail::vao_guard<vertex_type> guard(_vao);
-
-        GLenum mode = geom_topology2gl_enum(t);
-        glDrawArrays(mode, (GLint)start, (GLsizei)size);
-    }
-
-private:
     GLuint                                _id;
     uniform_type                          _uniform;
     GLuint                                _attribs; // TODO: what if buffer is removed?
     detail::vertex_array<vertex_type>     _vao;
-    detail::unibofrm_buffer<uniform_type> _ubo;
+    detail::uniform_buffer<uniform_type>  _ubo;
 };
 
 } // glespp

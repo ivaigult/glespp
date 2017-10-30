@@ -2,19 +2,16 @@
 
 struct light {
     vec4 position;
+};
+
+struct material_pr {
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
 };
 
-struct material {
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 specular;
-};
-
-uniform material  uMaterial;
-uniform light     uLight;
+uniform material_pr uMaterial;
+uniform light       uLight;
 
 varying vec3 vPos;
 varying vec3 vNorm;
